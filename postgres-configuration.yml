@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-configuration
+data:
+ url: jdbc:postgresql://app-db:5432/learntocode
+ db: learntocode

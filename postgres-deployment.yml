@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-db
+  labels:
+    app: app-db
+    tier: database
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app: app-db
+    tier: database
+  clusterIP: None
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pv-claim
+  labels:
+    app: app-db
+    tier: database
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-db
+  labels:
+    app: app-db
+    tier: database
+spec:
+  selector:
+    matchLabels:
+      app: app-db
+      tier: database
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: app-db
+        tier: database
+    spec:
+      containers:
+        - image: postgres:13.1-alpine
+          name: app-db
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                  configMapKeyRef:
+                    name: postgres-configuration
+                    key: db
+            - name: POSTGRES_USER
+              valueFrom:
+                    secretKeyRef:
+                      name: postgres-user-credentials
+                      key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                    secretKeyRef:
+                      name: postgres-user-credentials
+                      key: password
+          ports:
+            - containerPort: 5432
+              name: app-db
+          volumeMounts:
+            - name: postgres-persistent-storage
+              mountPath: /var/lib/posgresql/data.
+      volumes:
+        - name: postgres-persistent-storage
+          persistentVolumeClaim:
+            claimName: postgres-pv-claim
