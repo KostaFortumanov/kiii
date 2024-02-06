@@ -1,0 +1,22 @@
+version: '2'
+
+services:
+  app-db:
+    image: 'postgres:13.1-alpine'
+    container_name: app-db
+    environment:
+      - POSTGRES_DB=learntocode
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+
+  back:
+    container_name: backend
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - app-db
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://app-db:5432/learntocode
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
